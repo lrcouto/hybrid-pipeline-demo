@@ -38,12 +38,13 @@ POST /run {params: {user_id, message}}            kedro server
 uv venv -p 3.12 .venv && uv pip install -p .venv/bin/python -r requirements.txt
 source .venv/bin/activate
 python create_db_and_data.py      # SQLite db: users, claims, docs, 600 synthetic past claims
-cp conf/base/credentials.yml.template conf/base/credentials.yml
+cp conf/base/credentials.yml.template conf/local/credentials.yml
+cp conf/base/credentials.yml.template conf/langfuse/credentials.yml
 export OPENAI_API_KEY=...         # any OpenAI-compatible endpoint: also set OPENAI_BASE_URL
 kedro run --pipelines triage_training
 ```
 
-Note: credentials.yml reads keys from environment variables; it is gitignored.
+Note: credentials live in each run env (`conf/local`, `conf/langfuse`), not in `base`: Kedro loads base plus one run env, so `--env langfuse` never reads `conf/local`. Both files read keys from environment variables and are gitignored.
 
 ## Run
 
