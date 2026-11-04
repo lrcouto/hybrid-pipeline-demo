@@ -34,45 +34,53 @@ Checks: editor and terminal font big enough for the back of the room, notificati
 
 ---
 
-## 0:00 – 0:40 · The problem, and the picture
+## 0:00 – 0:45 · What this project is, and Kedro in 30 seconds
 
-**Show:** Kedro-Viz, the default pipeline.
+**Show:** Kedro-Viz, the default pipeline. Leave it up while you talk.
 
-> A claim comes in as free text. A customer writes "someone rear-ended me, my neck hurts, the shop quoted 18 grand". We have a classic ML model that decides whether a claim needs a human adjuster, but the model wants numbers and booleans, not a paragraph.
+> This is a small insurance claims assistant, built on one of our public examples with synthetic data. A customer sends a message, and it decides whether a human adjuster should look at the claim and writes the reply.
+
+For the people who have never used Kedro:
+
+> If you haven't used Kedro: it's an open-source Python framework for pipelines. Nodes are plain Python functions. A pipeline connects them by the names of their inputs and outputs, and a YAML file, the data catalog, says where each name lives: a table, a file, a model.
+
+For the Kedro users:
+
+> If you already use Kedro, what's new today is the LLM context node, LLMs and prompts as datasets, and the built-in HTTP server.
+
+---
+
+## 0:45 – 1:15 · The problem, and the picture
+
+**Show:** still Kedro-Viz.
+
+> The claim comes in as free text: "someone rear-ended me, my neck hurts, the shop quoted 18 grand". Our ML model decides on review, but it wants numbers and booleans, not a paragraph.
 >
-> So the pipeline is: an LLM reads the message and fills in the model's features, the model scores it, and another LLM writes the reply.
->
-> Blue nodes are agentic, yellow nodes are classic ML, grey is the database. It's one pipeline, and Kedro doesn't treat the two kinds of node differently.
+> So an LLM fills in the model's features, the model scores them, and another LLM writes the reply. Blue is agentic, yellow is classic ML, grey is the database. One pipeline.
 
 **Point at:** `extraction_context_node` → `extract_claim_features_node` → `predict_review_risk_node` → response agent.
 
 ---
 
-## 0:40 – 2:00 · One catalog
+## 1:15 – 2:15 · One catalog
 
 **Show:** `conf/base/catalog.yml`. Scroll slowly through the four sections.
 
-> This is the whole data layer. Up top, the SQL tables: user profile, docs, claim history. The user query takes the user ID from the request at runtime.
+> This is the catalog I mentioned, the whole data layer. Up top, the SQL tables: user profile, docs, claim history. The user query takes the user ID from the request at runtime.
 >
 > Then the ML model, which is a pickle file, and its metrics.
 >
 > Then the GenAI part. The LLM is a dataset. The prompts are datasets, versioned files on disk. Nothing special.
 >
-> Nodes never import a client or read a file. They ask for `llm` or `triage_model` by name and get it.
-
-**Then:** switch to `conf/langfuse/catalog_genai_config.yml`.
-
-> Separation of concerns: this is a second environment. Same dataset names, but now the intent prompt comes versioned from Langfuse and every LLM call is traced. You switch with `--env langfuse`. No node code changes.
-
-Cut first if you're running late: the Langfuse env file. Say it in one sentence instead.
+> Nodes never import a client or read a file. They ask for `llm` or `triage_model` by name and get it. Swap the database or the model provider here and no Python changes.
 
 ---
 
-## 2:00 – 3:45 · The LLM context node (the main part)
+## 2:15 – 3:45 · The LLM context node (the main part)
 
 **Show:** `src/kedro_agentic_workflows/pipelines/claim_scoring/pipeline.py`, lines 10–15.
 
-> This is the new piece. `llm_context_node` says: this step needs the `llm` and the `extraction_prompt`. Both are catalog entries. Kedro loads them and bundles them into one `LLMContext` object.
+> This is the pipeline code: three nodes. The first one is the new piece. `llm_context_node` says: this step needs the `llm` and the `extraction_prompt`. Both are catalog entries. Kedro loads them and bundles them into one `LLMContext` object.
 
 **Show:** `claim_scoring/nodes.py`, lines 9–26.
 
@@ -84,7 +92,7 @@ Cut first if you're running late: the Langfuse env file. Say it in one sentence 
 
 > If the message isn't a new claim, it returns empty and the model step is skipped.
 
-**Optional, if they look interested:** flip to `response_generation/pipeline.py` lines 16–27.
+**Optional, only if you're ahead of time:** flip to `response_generation/pipeline.py` lines 16–27.
 
 > Same idea with tools: the response agent gets database lookups as tools, and the tools' inputs come from the catalog too.
 
@@ -108,7 +116,7 @@ If asked about the numbers: accuracy 0.77 and AUC 0.73 on synthetic data. It's t
 
 **Show:** Terminal 2. Before running it, show `truck.json` quickly (`cat truck.json`).
 
-> Kedro has a built-in HTTP server. I'm sending the claim as a runtime parameter.
+> Your example started with an API call, so that's how we'll trigger it. Kedro has a built-in HTTP server, `kedro server start`, and each request runs the pipeline with the claim passed in as a runtime parameter.
 
 ```bash
 curl -s -X POST localhost:8765/run -H 'Content-Type: application/json' -d @truck.json
@@ -132,7 +140,11 @@ The run takes a few seconds per request with gpt-4o. Talk while it runs. Don't r
 
 ## 5:30 – 6:40 · Evaluation
 
-**Show:** Langfuse tab, extraction experiment.
+**Show first:** `conf/langfuse/catalog_genai_config.yml`, ten seconds.
+
+> For evaluation we use a second config environment. Same dataset names, but now the prompt comes versioned from Langfuse and every LLM call is traced. You switch with `--env langfuse`, and no node code changes.
+
+**Then:** Langfuse tab, extraction experiment.
 
 > Because the LLM step has a strict output schema, we can evaluate it like normal code: twelve labelled claims, and we check each field. Exact match on type and booleans, amount within 10%, days within one.
 
@@ -164,10 +176,12 @@ kedro run --pipelines extraction_evaluation --env langfuse
 | `{"detail": ... "Field required"}` | The body didn't reach the server. Use `-d @truck.json`, never a pasted multi-line command |
 | Langfuse won't load | Skip the live eval run and describe it with the per-field scores |
 | Viz won't start | `kedro viz build` beforehand and open `build/index.html` |
-| Running over time | Drop the Langfuse env file (0:40 beat) and the response-agent tools aside (2:00 beat) |
+| Running over time | Drop the Langfuse env file (say it in one sentence) and the response-agent tools aside. Don't cut the intro: newcomers need it to follow the rest |
 
 ## Likely questions
 
+- **(Newcomers) Is this an agent framework?** No. Kedro structures the pipeline, config and data; the agents inside are LangGraph, and the model is scikit-learn. Kedro doesn't replace either.
+- **(Newcomers) Where does it run?** Anywhere Python runs: locally, in a container, or deployed to orchestrators such as Airflow, Databricks or Kubeflow.
 - **Why not just let the LLM decide escalation?** The model is trained on history and auditable. The LLM only translates text into features, which you can evaluate field by field.
 - **Can I use another provider?** Yes: any OpenAI-compatible endpoint via `OPENAI_BASE_URL`, and the model name as a runtime parameter. A different LangChain dataset type also works with no node changes.
 - **What's `LLMContext`?** A container Kedro builds from the catalog: `.llm`, `.prompts[...]`, `.tools`. Kedro 1.2 and later.
