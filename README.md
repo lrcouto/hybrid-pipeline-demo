@@ -56,8 +56,9 @@ kedro run --params "user_id=3,message=My kitchen flooded yesterday"
 
 ```bash
 kedro server start --port 8765
-curl -s -X POST localhost:8765/run -H 'Content-Type: application/json' \
-  -d '{"params": {"user_id": 3, "message": "Three weeks ago a delivery truck rear-ended me on the highway. My neck still hurts and the repair shop quoted 18,000 dollars. I did not call the police."}}'
+# in another terminal:
+curl -s -X POST localhost:8765/run -H 'Content-Type: application/json' -d @truck.json    # escalated to an adjuster
+curl -s -X POST localhost:8765/run -H 'Content-Type: application/json' -d @breakin.json  # fast-track
 cat data/08_reporting/triage_report.json
 ```
 
