@@ -1,0 +1,18 @@
+# Langfuse env (`--env langfuse`): same dataset names as conf/base, Langfuse
+# behind them. Prompts get versions, every LLM call gets traced. No node changes.
+
+intent_prompt:
+  type: kedro_datasets_experimental.langfuse.PromptDataset
+  filepath: data/intent_detection/prompts/intent_prompt_langfuse.json
+  prompt_name: "intent-classifier"
+  prompt_type: "chat"
+  credentials: langfuse_credentials
+  sync_policy: local        # local | remote | strict
+  mode: sdk                 # keeps Langfuse prompt-version tracking
+  load_args:
+    version: ${runtime_params:intent_prompt_version, 1}
+
+intent_tracer:
+  type: kedro_datasets_experimental.langfuse.TraceDataset
+  credentials: langfuse_credentials
+  mode: langchain           # a LangChain CallbackHandler used in session_config

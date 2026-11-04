@@ -1,0 +1,18 @@
+# Per-request inputs. The HTTP server (or `kedro run --params`) overrides them.
+user_id: ${runtime_params:user_id, 3}
+message: ${runtime_params:message, "Someone broke into my car last night and stole my laptop and camera. About 3200 dollars worth. I filed a police report this morning."}
+
+docs_matches: 3
+
+triage:
+  features:
+    categorical: [incident_type]
+    numeric: [estimated_amount, injuries, police_report, third_party, days_to_report]
+  target: needed_review
+  test_size: 0.25
+  random_state: 42
+  review_threshold: 0.5
+
+# Evaluation (run with --env langfuse)
+intent_prompt_version: ${runtime_params:intent_prompt_version, 1}
+model_name: ${runtime_params:model_name, gpt-4o}

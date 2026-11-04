@@ -1,0 +1,170 @@
+[
+  {
+    "id": "extraction_001",
+    "input": {
+      "message": "My kitchen flooded yesterday when the dishwasher hose burst. The plumber says repairs will be about 4,500 dollars."
+    },
+    "expected_output": {
+      "incident_type": "water_damage",
+      "estimated_amount": 4500,
+      "injuries": false,
+      "police_report": false,
+      "third_party": false,
+      "days_to_report": 1
+    }
+  },
+  {
+    "id": "extraction_002",
+    "input": {
+      "message": "A tree fell on my garage during last night's storm. Roof damage estimate is $12,000. Nobody was hurt."
+    },
+    "expected_output": {
+      "incident_type": "weather",
+      "estimated_amount": 12000,
+      "injuries": false,
+      "police_report": false,
+      "third_party": false,
+      "days_to_report": 1
+    }
+  },
+  {
+    "id": "extraction_003",
+    "input": {
+      "message": "Someone stole my bike from outside the office today. It was worth 900 dollars and I reported it to the police."
+    },
+    "expected_output": {
+      "incident_type": "theft",
+      "estimated_amount": 900,
+      "injuries": false,
+      "police_report": true,
+      "third_party": false,
+      "days_to_report": 0
+    }
+  },
+  {
+    "id": "extraction_004",
+    "input": {
+      "message": "I was hit by another driver at an intersection two days ago. I broke my wrist. The police came to the scene. Car repairs are around $7,000."
+    },
+    "expected_output": {
+      "incident_type": "auto_collision",
+      "estimated_amount": 7000,
+      "injuries": true,
+      "police_report": true,
+      "third_party": true,
+      "days_to_report": 2
+    }
+  },
+  {
+    "id": "extraction_005",
+    "input": {
+      "message": "An electrical fire started in my kitchen last week. Damage is around $25,000. The fire department came, no police were involved."
+    },
+    "expected_output": {
+      "incident_type": "fire",
+      "estimated_amount": 25000,
+      "injuries": false,
+      "police_report": false,
+      "third_party": false,
+      "days_to_report": 7
+    }
+  },
+  {
+    "id": "extraction_006",
+    "input": {
+      "message": "Hail dented my car's roof and hood this morning. The body shop estimate is $3,100."
+    },
+    "expected_output": {
+      "incident_type": "weather",
+      "estimated_amount": 3100,
+      "injuries": false,
+      "police_report": false,
+      "third_party": false,
+      "days_to_report": 0
+    }
+  },
+  {
+    "id": "extraction_007",
+    "input": {
+      "message": "I backed into a pole in a parking lot 10 days ago. Bumper repair is 1,200 dollars."
+    },
+    "expected_output": {
+      "incident_type": "auto_collision",
+      "estimated_amount": 1200,
+      "injuries": false,
+      "police_report": false,
+      "third_party": false,
+      "days_to_report": 10
+    }
+  },
+  {
+    "id": "extraction_008",
+    "input": {
+      "message": "My neighbour's pipe leaked through the ceiling into my flat a month ago and ruined the floor. Contractors quoted 9,800 dollars."
+    },
+    "expected_output": {
+      "incident_type": "water_damage",
+      "estimated_amount": 9800,
+      "injuries": false,
+      "police_report": false,
+      "third_party": true,
+      "days_to_report": 30
+    }
+  },
+  {
+    "id": "extraction_009",
+    "input": {
+      "message": "A cyclist crashed into my parked car yesterday and hurt his leg. Police took statements. The door repair is about 2,400 dollars."
+    },
+    "expected_output": {
+      "incident_type": "auto_collision",
+      "estimated_amount": 2400,
+      "injuries": true,
+      "police_report": true,
+      "third_party": true,
+      "days_to_report": 1
+    }
+  },
+  {
+    "id": "extraction_010",
+    "input": {
+      "message": "My phone fell into the lake on holiday three days ago. It cost 1,100 dollars."
+    },
+    "expected_output": {
+      "incident_type": "other",
+      "estimated_amount": 1100,
+      "injuries": false,
+      "police_report": false,
+      "third_party": false,
+      "days_to_report": 3
+    }
+  },
+  {
+    "id": "extraction_011",
+    "input": {
+      "message": "Burglars broke in while we were away two weeks ago and took jewellery worth 15,000 dollars. We filed a police report when we got back."
+    },
+    "expected_output": {
+      "incident_type": "theft",
+      "estimated_amount": 15000,
+      "injuries": false,
+      "police_report": true,
+      "third_party": false,
+      "days_to_report": 14
+    }
+  },
+  {
+    "id": "extraction_012",
+    "input": {
+      "message": "Lightning struck our house five days ago and fried the TV and router, about 1,500 dollars total."
+    },
+    "expected_output": {
+      "incident_type": "weather",
+      "estimated_amount": 1500,
+      "injuries": false,
+      "police_report": false,
+      "third_party": false,
+      "days_to_report": 5
+    }
+  }
+]

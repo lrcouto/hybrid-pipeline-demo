@@ -1,0 +1,5 @@
+kedro==1.7.0
+kedro-datasets[pandas-sqltabledataset,pandas-sqlquerydataset,yaml-yamldataset,json-jsondataset,pickle-pickledataset,langchain-chatopenaidataset,langfuse]~=9.5.0
+kedro-viz>=12.3.0
+langgraph~=1.0.0
+scikit-learn~=1.7.0

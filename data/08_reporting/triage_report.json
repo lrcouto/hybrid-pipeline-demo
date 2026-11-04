@@ -1,0 +1,18 @@
+{
+  "message": "Someone broke into my car last night and stole my laptop and camera. About 3200 dollars worth. I filed a police report this morning.",
+  "intent": "claim_new",
+  "claim_features": {
+    "incident_type": "theft",
+    "estimated_amount": 3200.0,
+    "injuries": false,
+    "police_report": true,
+    "third_party": false,
+    "days_to_report": 0
+  },
+  "triage_prediction": {
+    "review_probability": 0.02,
+    "needs_review": false
+  },
+  "reply": "Thank you for reporting the theft incident last night. We have created claim #5 for your theft loss and found no similar prior claims on file. Since your claim qualifies for fast-track processing, it will be routed through expedited handling. Please submit the police report and an itemized list of stolen items with their values when convenient.",
+  "escalated": false
+}

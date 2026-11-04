@@ -1,0 +1,42 @@
+# Langfuse evaluation datasets (`--env langfuse`): the intent classifier and the
+# claim feature extraction, each run as a Langfuse experiment.
+
+intent_evaluation_data:
+  type: kedro_datasets_experimental.langfuse.EvaluationDataset
+  dataset_name: evaluations/intent_agent_evaluation
+  filepath: data/intent_detection/evaluation/intent_evaluation.json
+  sync_policy: local
+  credentials: langfuse_credentials
+
+intent_judge_llm:
+  type: langchain.ChatOpenAIDataset
+  kwargs:
+    model: "gpt-4o"
+    temperature: 0.0
+  credentials: openai
+
+intent_judge_prompt:
+  type: kedro_datasets_experimental.langfuse.PromptDataset
+  filepath: data/intent_detection/evaluation/prompts/intent_judge_llm_prompt.json
+  prompt_name: "intent_llm_judge_evaluator_prompt"
+  prompt_type: "chat"
+  credentials: langfuse_credentials
+  sync_policy: local       # local|remote|strict
+  mode: langchain          # langchain|sdk
+
+langfuse_client:
+  type: kedro_datasets_experimental.langfuse.TraceDataset
+  credentials: langfuse_credentials
+  mode: sdk    # langchain | openai | sdk
+
+# --- extraction_evaluation: the LLM step that feeds the triage model ---
+extraction_evaluation_data:
+  type: kedro_datasets_experimental.langfuse.EvaluationDataset
+  dataset_name: evaluations/claim_feature_extraction
+  filepath: data/claim_scoring/evaluation/extraction_evaluation.json
+  sync_policy: local
+  credentials: langfuse_credentials
+
+extraction_eval_summary:
+  type: json.JSONDataset
+  filepath: data/08_reporting/extraction_eval_summary.json

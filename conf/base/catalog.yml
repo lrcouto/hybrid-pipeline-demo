@@ -1,0 +1,89 @@
+# One catalog for the whole hybrid pipeline: the data store, the ML model and
+# the GenAI pieces (LLM, prompts) are all just datasets. Node code never knows
+# where any of them come from.
+
+# ── Data store (SQL) ─────────────────────────────────────────────────────────
+db_engine:
+  type: kedro_agentic_workflows.datasets.sqlalchemy_dataset.SQLAlchemyEngineDataset
+  credentials: db_credentials
+
+user_data:
+  type: pandas.SQLQueryDataset
+  sql: "select * from user where id == ${runtime_params:user_id, 3}"
+  credentials: db_credentials
+
+docs:
+  type: pandas.SQLQueryDataset
+  sql: "select question, answer from doc"
+  credentials: db_credentials
+
+session_table:
+  type: pandas.SQLTableDataset
+  credentials: db_credentials
+  table_name: session
+  save_args:
+    if_exists: append
+
+claim_history:
+  type: pandas.SQLQueryDataset
+  sql: "select * from claim_history"
+  credentials: db_credentials
+
+# ── Classic ML ───────────────────────────────────────────────────────────────
+triage_model:
+  type: pickle.PickleDataset
+  filepath: data/06_models/triage_model.pkl
+
+triage_metrics:
+  type: json.JSONDataset
+  filepath: data/08_reporting/triage_metrics.json
+
+# ── GenAI ────────────────────────────────────────────────────────────────────
+llm:
+  type: langchain.ChatOpenAIDataset
+  kwargs:
+    model: ${runtime_params:model_name, gpt-4o}
+    temperature: ${runtime_params:temperature, 0.0}
+  credentials: openai
+
+intent_prompt:
+  type: kedro_datasets_experimental.langchain.PromptDataset
+  filepath: data/intent_detection/prompts/intent.yml
+  template: ChatPromptTemplate
+  dataset:
+    type: yaml.YAMLDataset
+
+extraction_prompt:
+  type: kedro_datasets_experimental.langchain.PromptDataset
+  filepath: data/claim_scoring/prompts/extraction.yml
+  template: ChatPromptTemplate
+  dataset:
+    type: yaml.YAMLDataset
+
+tool_prompt:
+  type: kedro_datasets_experimental.langchain.PromptDataset
+  filepath: data/response_generation/prompts/tool.txt
+  template: PromptTemplate
+  dataset:
+    type: text.TextDataset
+
+response_prompt:
+  type: kedro_datasets_experimental.langchain.PromptDataset
+  filepath: data/response_generation/prompts/response.yml
+  template: ChatPromptTemplate
+  dataset:
+    type: yaml.YAMLDataset
+
+# No tracing in the base env. `--env langfuse` swaps this for a Langfuse tracer.
+intent_tracer:
+  type: kedro_agentic_workflows.datasets.no_tracer_dataset.NoTracerDataset
+
+# ── Result ───────────────────────────────────────────────────────────────────
+triage_report:
+  type: json.JSONDataset
+  filepath: data/08_reporting/triage_report.json
+
+# Everything else stays in memory. `assign` keeps LLM clients from being copied.
+"{default_dataset}":
+  type: MemoryDataset
+  copy_mode: "assign"

@@ -1,0 +1,137 @@
+{
+  "intent_agent_context_node": {
+    "fill": "#4A9EF5",
+    "color": "#000000",
+    "stroke": "#CFDFE7"
+  },
+  "detect_intent_node": {
+    "fill": "#4A9EF5",
+    "color": "#000000",
+    "stroke": "#CFDFE7"
+  },
+  "extraction_context_node": {
+    "fill": "#4A9EF5",
+    "color": "#000000",
+    "stroke": "#CFDFE7"
+  },
+  "extract_claim_features_node": {
+    "fill": "#4A9EF5",
+    "color": "#000000",
+    "stroke": "#CFDFE7"
+  },
+  "response_agent_context_node": {
+    "fill": "#4A9EF5",
+    "color": "#000000",
+    "stroke": "#CFDFE7"
+  },
+  "generate_response_node": {
+    "fill": "#4A9EF5",
+    "color": "#000000",
+    "stroke": "#CFDFE7"
+  },
+  "llm": {
+    "fill": "#97BAC9",
+    "color": "#000000",
+    "stroke": "#CFDFE7"
+  },
+  "intent_prompt": {
+    "fill": "#97BAC9",
+    "color": "#000000",
+    "stroke": "#CFDFE7"
+  },
+  "extraction_prompt": {
+    "fill": "#97BAC9",
+    "color": "#000000",
+    "stroke": "#CFDFE7"
+  },
+  "tool_prompt": {
+    "fill": "#97BAC9",
+    "color": "#000000",
+    "stroke": "#CFDFE7"
+  },
+  "response_prompt": {
+    "fill": "#97BAC9",
+    "color": "#000000",
+    "stroke": "#CFDFE7"
+  },
+  "intent_detection_context": {
+    "fill": "#97BAC9",
+    "color": "#000000",
+    "stroke": "#CFDFE7"
+  },
+  "extraction_context": {
+    "fill": "#97BAC9",
+    "color": "#000000",
+    "stroke": "#CFDFE7"
+  },
+  "response_generation_context": {
+    "fill": "#97BAC9",
+    "color": "#000000",
+    "stroke": "#CFDFE7"
+  },
+  "claim_features": {
+    "fill": "#97BAC9",
+    "color": "#000000",
+    "stroke": "#CFDFE7"
+  },
+  "predict_review_risk_node": {
+    "fill": "#FFC900",
+    "color": "#000000",
+    "stroke": "#FFE680"
+  },
+  "split_data_node": {
+    "fill": "#FFC900",
+    "color": "#000000",
+    "stroke": "#FFE680"
+  },
+  "train_model_node": {
+    "fill": "#FFC900",
+    "color": "#000000",
+    "stroke": "#FFE680"
+  },
+  "evaluate_model_node": {
+    "fill": "#FFC900",
+    "color": "#000000",
+    "stroke": "#FFE680"
+  },
+  "triage_model": {
+    "fill": "#FFE680",
+    "color": "#000000",
+    "stroke": "#FFC900"
+  },
+  "triage_prediction": {
+    "fill": "#FFE680",
+    "color": "#000000",
+    "stroke": "#FFC900"
+  },
+  "triage_metrics": {
+    "fill": "#FFE680",
+    "color": "#000000",
+    "stroke": "#FFC900"
+  },
+  "user_data": {
+    "fill": "#B0B0B0",
+    "color": "#000000",
+    "stroke": "#E0E0E0"
+  },
+  "docs": {
+    "fill": "#B0B0B0",
+    "color": "#000000",
+    "stroke": "#E0E0E0"
+  },
+  "claim_history": {
+    "fill": "#B0B0B0",
+    "color": "#000000",
+    "stroke": "#E0E0E0"
+  },
+  "session_table": {
+    "fill": "#B0B0B0",
+    "color": "#000000",
+    "stroke": "#E0E0E0"
+  },
+  "db_engine": {
+    "fill": "#B0B0B0",
+    "color": "#000000",
+    "stroke": "#E0E0E0"
+  }
+}
