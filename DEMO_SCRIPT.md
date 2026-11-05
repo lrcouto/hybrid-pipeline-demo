@@ -194,3 +194,65 @@ kedro run --pipelines extraction_evaluation --env langfuse
 - **Can I use another provider?** Yes: any OpenAI-compatible endpoint via `OPENAI_BASE_URL`, and the model name as a runtime parameter. A different LangChain dataset type also works with no node changes.
 - **What's `LLMContext`?** A container Kedro builds from the catalog: `.llm`, `.prompts[...]`, `.tools`. Kedro 1.2 and later.
 - **Is the server production-ready?** It has no authentication, so bind to localhost or put it behind your own gateway. It returns run status; results go wherever the catalog says.
+
+---
+
+## Appendix: how the project works (recap)
+
+Background for you, not for saying on stage. It keeps the structure of kedro-academy's `kedro-agentic-workflows`, an insurance customer-support assistant built from LangGraph agents inside Kedro pipelines. What we changed: a classic ML model now sits between the two agents, and runs are triggered by an API call instead of an interactive prompt.
+
+### What it does
+
+A customer sends one message ("a truck rear-ended me, my neck hurts, the shop quoted $18,000"). The project:
+1. Works out what the customer wants.
+2. If it's a new claim, turns the text into structured features and asks a trained model whether a human adjuster should review it.
+3. Writes a reply. It can look up docs, check the user's past claims, and create the claim along the way.
+
+The data is synthetic and lives in a local SQLite database: users, claims, FAQ docs, sessions and messages, plus 600 historical claims we added to train the model.
+
+### The flow
+
+```
+POST /run {"params": {user_id, message}}         Kedro's built-in HTTP server
+  │
+  ├─ intent_detection        (agentic)
+  │    session + user profile from SQL
+  │    llm_context_node → LangGraph agent → intent + reason
+  │
+  ├─ claim_scoring           (agentic → ML)
+  │    llm_context_node → LLM fills ClaimFeatures (Pydantic schema)
+  │    scikit-learn model → review probability, needs_review
+  │    (skipped unless intent == claim_new)
+  │
+  └─ response_generation     (agentic)
+       llm_context_node with tools: lookup_docs, get_user_claims, create_claim
+       LangGraph agent → reply, claim_created, escalated
+       → data/08_reporting/triage_report.json + message log in SQL
+```
+
+- **Intent detection.** The original's stateful LangGraph agent. It classifies the message as `general_question`, `claim_new`, `existing_claim_question` or `clarification_needed`, and gives a reason. The original asked follow-up questions in a loop. We removed that because the message now comes in as a runtime parameter.
+- **Claim scoring (new).** A second LLM context node turns the free text into the six features the model expects: incident type, amount, injuries, police report, third party and days to report. The `triage_model` is a gradient boosting classifier trained by the separate `triage_training` pipeline, loaded from a pickle like any other dataset.
+- **Response generation.** The original's tool-using agent, which decides for itself which tools to call. A new rule in its prompt passes on the model's verdict: if the claim needs review, tell the customer an adjuster will look at it and escalate; otherwise fast-track it. The customer never sees the probability.
+
+### How Kedro fits in
+
+- **One catalog for everything.** `conf/base/catalog.yml` holds the SQL tables, the pickled model, the LLM (`ChatOpenAIDataset`) and the prompts (`PromptDataset`). Nodes ask for things by name and never build clients or read files.
+- **LLM context nodes.** `llm_context_node` bundles an LLM, its prompts and its tools from catalog entries into one `LLMContext`. Node functions receive the context as a normal input, so they stay small and testable.
+- **Config environments swap providers.** In the original, `--env langfuse` and `--env opik` gave the same dataset names different backends. We kept only Langfuse. The base environment runs with no tracing and no Langfuse keys. With `--env langfuse`, the intent prompt is versioned in Langfuse and the LLM calls are traced. No node code changes between them.
+- **Credentials stay in each run environment.** There is a `credentials.yml` in `conf/local/` and another in `conf/langfuse/`. Kedro only loads base plus one run environment, so each needs its own copy.
+- **Sessions and logging.** As in the original, every run creates a session row and logs its messages to SQL for auditing.
+
+### Pipelines
+
+| Pipeline | What it does |
+|---|---|
+| `__default__` | intent_detection + claim_scoring + response_generation, handling one message |
+| `triage_training` | Classic ML: split the history, train, evaluate (accuracy 0.77, AUC 0.73 on synthetic data) |
+| `intent_detection_evaluation` | From the original: a labelled set, an LLM judge, results published as a Langfuse experiment |
+| `extraction_evaluation` | New: 12 labelled claims scored field by field, as a Langfuse experiment |
+
+### What we removed from the original
+
+- The OpenAI Agents SDK and AutoGen versions of response generation.
+- Everything for Opik.
+- The interactive `questionary` input and the clarification loop.
