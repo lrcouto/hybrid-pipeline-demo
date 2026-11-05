@@ -27,7 +27,7 @@ Then open, left to right:
 | Browser tab 1 | `kedro viz run` (default pipeline selected, styles applied) |
 | Browser tab 2 | Langfuse, logged in, on the `extraction` experiment comparison |
 | Editor | `conf/base/catalog.yml`, `claim_scoring/pipeline.py`, `claim_scoring/nodes.py`, `conf/langfuse/catalog_genai_config.yml` as tabs in that order |
-| Terminal 1 | `kedro server start --port 8765` running |
+| Terminal 1 | `kedro server start --port 8765 --env langfuse` running, so the live calls are traced in Langfuse (plain `kedro server start --port 8765` also works, just without traces) |
 | Terminal 2 | in the repo root, empty, font size up |
 
 Checks: editor and terminal font big enough for the back of the room, notifications off, Langfuse experiment already run at least once so the page has data.
@@ -76,37 +76,45 @@ For the Kedro users:
 
 ---
 
-## 2:15 – 3:45 · The LLM context node (the main part)
+## 2:15 – 3:30 · The LLM context node (the main part)
 
-**Show:** `src/kedro_agentic_workflows/pipelines/claim_scoring/pipeline.py`, lines 10–15.
+Use intent detection: it's the first agentic step, its result shows up in the report, and its prompt is the one Langfuse versions later.
 
-> This is the pipeline code: three nodes. The first one is the new piece. `llm_context_node` says: this step needs the `llm` and the `extraction_prompt`. Both are catalog entries. Kedro loads them and bundles them into one `LLMContext` object.
+**Show:** `src/kedro_agentic_workflows/pipelines/intent_detection/pipeline.py`, lines 39–58.
 
-**Show:** `claim_scoring/nodes.py`, lines 9–26.
-
-> And here's the node that uses it. A Pydantic model describing exactly what the ML model expects: incident type, amount, injuries, police report, third party, days to report.
+> This is the pipeline code. Ordinary nodes, plus this one, which is the new piece. `llm_context_node` says: this step needs the `llm` and the `intent_prompt`. Both are catalog entries. Kedro loads them and bundles them into one `LLMContext` object.
 >
-> The function takes the context, asks the LLM for structured output against that schema, and returns a dict. That's the agentic step, about four lines.
+> The next node, `detect_intent`, just takes that context as an input, next to the message and the user's profile.
 
-**Show:** lines 29–35.
+**Show:** `intent_detection/agent.py`, lines 72–78.
 
-> If the message isn't a new claim, it returns empty and the model step is skipped.
+> Inside the agent, this is all the LLM setup there is. Take the prompt from the context, take the LLM from the context, ask for structured output: one of four intents and a reason. No API keys, no file paths, no client construction.
 
-**Optional, only if you're ahead of time:** flip to `response_generation/pipeline.py` lines 16–27.
+Point at the comment on lines 68–71 (optional, 10 seconds):
 
-> Same idea with tools: the response agent gets database lookups as tools, and the tools' inputs come from the catalog too.
+> And this is why config matters: in the base environment the prompt is a local YAML file, in the Langfuse environment it's a versioned prompt from Langfuse. Same agent code.
 
 **Land it:**
 
 > Because the LLM is an input, you can test these functions with a fake LLM, swap models with a runtime parameter, and see every dependency in Viz.
 
+**Optional, only if you're ahead of time:** `response_generation/pipeline.py` lines 16–27.
+
+> Same idea with tools: the response agent gets database lookups as tools, and the tools' inputs come from the catalog too.
+
 ---
 
-## 3:45 – 4:15 · The ML node
+## 3:30 – 4:15 · From text to ML input, and the ML node
 
-**Show:** `claim_scoring/nodes.py`, lines 38–49.
+**Show:** `claim_scoring/pipeline.py`, lines 10–27.
 
-> And the ML side is plain scikit-learn. `predict_proba` on a dataframe. No LLM code anywhere in this function. It was trained by a normal Kedro pipeline, `triage_training`, with a gradient boosting classifier, on 600 synthetic past claims.
+> Same pattern again, with a different prompt. This LLM context node feeds the extraction step, and its output goes straight into a classic ML node.
+
+**Show:** `claim_scoring/nodes.py`, lines 9–19, then 38–49.
+
+> The extraction asks for exactly what the model needs: incident type, amount, injuries, police report, third party, days to report. Validated by Pydantic, so the model never gets a paragraph.
+>
+> And the ML side is plain scikit-learn: `predict_proba` on a dataframe, no LLM code anywhere. It was trained by a normal Kedro pipeline, `triage_training`, on 600 synthetic past claims.
 
 If asked about the numbers: accuracy 0.77 and AUC 0.73 on synthetic data. It's there to show the mechanics, not to be a real model.
 
@@ -142,9 +150,9 @@ The run takes a few seconds per request with gpt-4o. Talk while it runs. Don't r
 
 **Show first:** `conf/langfuse/catalog_genai_config.yml`, ten seconds.
 
-> For evaluation we use a second config environment. Same dataset names, but now the prompt comes versioned from Langfuse and every LLM call is traced. You switch with `--env langfuse`, and no node code changes.
+> For evaluation we use a second config environment. Same dataset names, but now the intent prompt you saw earlier comes versioned from Langfuse and every LLM call is traced. You switch with `--env langfuse`, and no node code changes.
 
-**Then:** Langfuse tab, extraction experiment.
+**Then:** Langfuse tab. Optionally first open the trace from the truck run (server started with `--env langfuse`) to show the intent call, then the extraction experiment.
 
 > Because the LLM step has a strict output schema, we can evaluate it like normal code: twelve labelled claims, and we check each field. Exact match on type and booleans, amount within 10%, days within one.
 
